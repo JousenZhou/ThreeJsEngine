@@ -7,7 +7,7 @@
 
 <script>
     import ThreeJs from "@/js/ThreeJsEngine";
-
+    import MMD from "../js/mmd/js";
     export default {
         name: "index",
         mounted() {
@@ -91,11 +91,48 @@
                             sphere.position.x = 20 + ( 10 * (Math.cos(step)));
                             sphere.position.y = 2 + ( 10 * Math.abs(Math.sin(step)));
                         })
+                    },
+                    // MMd测试
+                    MMdTest:async function () {
+                        let i = new this.mmd();
+                        let data = {
+                            mmdModel: "/static/mmdModel/Reinhardt.pmx",
+                            mmdAnimation: ["/static/mmdAnimation/action.vmd"],  //👈这是数组
+                            mmdMusic: "/static/mmdMusic/病名为爱.mp3",
+                            mmdCamera: ["/static/mmdCamera/camera.vmd"],
+                            mmdScene: "/static/mmdScene/下影灯/下影灯ver1.0.pmx"
+                        };
+                        let mmdMsg = await i.loadWithAnimation(data.mmdModel, data.mmdAnimation);
+                        let mmdCamera = await i.loadCamera(data.mmdCamera);//自动镜头
+                        let mmdMusic = await i.loadAudio(data.mmdMusic);// 定点声源/全局声源
+                        // let scene = await i.loadScene(data.mmdScene);
+                        // scene.scale.set(10, 10, 10);
+                        mmdMsg.mesh.scale.set(0.9,0.9,0.9);
+                        // this.scene.add(scene);
+
+                        this.scene.add(mmdMsg.mesh);
+                        //控制台【Gui】 骨骼，物理，刚体，动画
+                        i.loadHelper({gui: true});
+                        i.addToHelperOfMMD(mmdMsg);
+                        i.addToHelperOfCamera(mmdCamera);
+                        i.musicRender(mmdMusic, mmdMsg.mesh, {
+                            positionSource: false,
+                            distance: 40,
+                            rolloffFactor: .5
+                        });
+                        let control = i.mmdControl();
+                        setTimeout(() => {
+                            control.play();
+                        }, 3000);
+                        this.setRenderFun("mmdUpdate", (() => {
+                            i.render();
+                        }));
                     }
                 },
-                async mounted() {
+                mounted() {
                     // this.physicsTest()
-                    this.normalTest();
+                    // this.normalTest()
+                    this.MMdTest();
                 }
             })
                 .initStats(this.$refs["Stats"])
@@ -118,7 +155,7 @@
                     }
                 })
                 .expandPlugin({
-                    // mmd: MMD
+                    mmd: MMD
                 })
                 .script();
         }
